@@ -7,4 +7,4 @@ cmds = ["python -m venv --copies /opt/venv && . /opt/venv/bin/activate && pip in
 [phases.build]
 
 [start]
-cmd = "gunicorn config.wsgi --bind 0.0.0.0:$PORT --log-file -"
+cmd = "bash start.sh"
