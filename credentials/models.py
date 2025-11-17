@@ -70,9 +70,15 @@ class CredentialUpdateToken(models.Model):
         """
         Generate the full private link URL
         """
+        import os
         if request:
             base_url = request.build_absolute_uri('/')[:-1]
         else:
-            base_url = "http://127.0.0.1:8000"
+            # Use Railway domain or fallback to localhost for development
+            railway_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '')
+            if railway_domain:
+                base_url = f"https://{railway_domain}"
+            else:
+                base_url = "http://127.0.0.1:8000"
         
         return f"{base_url}/credentials/info/{self.token}/"
