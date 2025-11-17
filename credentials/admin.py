@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from .models import CredentialUpdateToken, CredentialSubmission
 
 
@@ -23,25 +24,38 @@ class CredentialSubmissionAdmin(admin.ModelAdmin):
 
 @admin.register(CredentialUpdateToken)
 class CredentialUpdateTokenAdmin(admin.ModelAdmin):
-    list_display = ['token_short', 'created_at', 'expires_at', 'is_valid_display', 'submission_count']
+    list_display = ['created_at', 'expires_at', 'is_valid_display', 'copy_link']
     list_filter = ['created_at', 'expires_at']
-    search_fields = ['token']
-    readonly_fields = ['token', 'created_at', 'get_private_link_display']
+    search_fields = ['token', 'description']
+    readonly_fields = ['token', 'created_at', 'full_link_display']
     
-    def token_short(self, obj):
-        return f"{obj.token[:20]}..."
-    token_short.short_description = 'Token'
+    fieldsets = (
+        ('Token Information', {
+            'fields': ('token', 'full_link_display', 'created_at', 'expires_at', 'description')
+        }),
+    )
     
     def is_valid_display(self, obj):
         return "✅ Valid" if obj.is_valid() else "❌ Expired"
     is_valid_display.short_description = 'Status'
     
-    def submission_count(self, obj):
-        # Count submissions made through this token (you can track this if needed)
-        return CredentialSubmission.objects.count()
-    submission_count.short_description = 'Total Submissions'
+    def copy_link(self, obj):
+        link = obj.get_private_link()
+        return format_html(
+            '<a href="{}" target="_blank" style="color: #0078d4; font-weight: bold;">📋 Open Link</a>',
+            link
+        )
+    copy_link.short_description = 'Link'
     
-    def get_private_link_display(self, obj):
-        return obj.get_private_link()
-    get_private_link_display.short_description = 'Private Link'
+    def full_link_display(self, obj):
+        link = obj.get_private_link()
+        return format_html(
+            '<div style="background: #f0f0f0; padding: 10px; border-radius: 5px; font-family: monospace;">'
+            '<strong>Copy this link:</strong><br>'
+            '<input type="text" value="{}" readonly style="width: 100%; padding: 5px; margin-top: 5px;" '
+            'onclick="this.select(); document.execCommand(\'copy\'); alert(\'Link copied to clipboard!\');">'
+            '</div>',
+            link
+        )
+    full_link_display.short_description = 'Full Link (Click to Copy)'
 
